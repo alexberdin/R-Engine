@@ -1,0 +1,509 @@
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Engine</title>
+</head>
+<!-- LAYOUT -->
+<template name="layout">
+    
+<!--      <div class="navbar navbar-inverse navbar-fixed-top">
+       <div class="navbar-inner">
+           <div class="container">       
+             <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+               <span class="icon-bar"></span>
+             </a>
+             <a class="brand" href="{{pathFor 'realtyList'}}">R-Engine</a>
+             <div class="nav-collapse collapse">
+               <ul class="nav navbar-nav">
+                 <ul class="nav navbar-nav">
+                   {{#if currentUser}}
+                   <li><a class="" href="{{pathFor 'realtySubmit'}}">Подать объявление</a></li>
+                   {{/if}}
+                 </ul>
+               </ul>
+               <ul class="nav pull-right">
+                 <li>{{>loginButtons}}</li>
+               </ul>
+             </div>                   
+         </div>
+      </div>
+    </div> -->
+  
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="{{pathFor 'realtyList'}}">R-Engine </a>
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+    </div>
+    <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+             {{#if currentUser}}
+                   <li><a class="" href="{{pathFor 'realtySubmit'}}">Подать объявление</a></li>
+             {{/if}}
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="##"></a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="##">{{> connection_tpl}}</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            {{> loginButtons}} <!-- here -->
+        </ul>        
+    </div>
+</div>
+  
+  
+    <br>
+    <br>
+    <br>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-3 col-md-2"><span class="glyphicon glyphicon-list" aria-hidden="true"></span></div>
+            <div class="col-xs-12 col-sm-6 col-md-8">{{> yield}}</div>
+            <div class="col-xs-3 col-md-2"><span class="glyphicon glyphicon-list glyphicon-align-right" aria-hidden="true"></span></div>
+<!--             <div class="span2">menu</div>
+            <div class="span8">{{> yield}}</div>
+            <div class="span2">advertising</div> -->
+        </div>
+    </div>
+</template>
+<!-- END LAYOUT -->
+<!-- INCLUDES -->
+
+<template name="accessDenied">
+    <div class="access-denied jumbotron">
+        <h2>Access Denied</h2>
+    </div>
+</template>
+
+<template name="loading">
+    <div style="margin-top:50%;">
+      {{>spinner}}
+    </div>
+</template>
+<template name="connection_tpl">
+  {{#if connection_status}}
+    <span class="label label-success" title="Соединено с сервером">&nbsp;<span class="glyphicon glyphicon-off" aria-hidden="true"></span>&nbsp;</span>
+  {{else}}
+    <span class="label label-danger" title="Соединение с сервером отсутствует">&nbsp;<span class="glyphicon glyphicon-off" aria-hidden="true"></span>&nbsp;</span>
+  {{/if}}
+</template>
+<!-- END INCLUDES -->
+
+
+<!-- REALTY -->
+<template name="realtyList">
+    <div>
+        {{#each realty}}
+          {{> realtyItem}}
+        {{/each}}
+    </div>
+</template>
+
+
+<template name="realtyPage">
+    {{> realtyItem}}
+</template>
+
+<template name="addImages">  
+    <h4>Добавьте фото:</h4>
+  
+    <form action="/" class="dropzone" id="dropzone"></form>
+    <br>    
+    <input type="submit" id="next-button" value="Далее" class="btn btn-default" style="display: none;"/>   
+    <br>
+    <br>  
+</template>
+
+<template name="realtyItem">
+    <div class="well">
+        <ul class="media-list">
+            <li class="media">
+                <a class="pull-left" href="{{pathFor 'realtyPage'}}">
+                    <img class="media-object img-polaroid" style="width:200px;" src="{{images.src}}"/>
+                </a>
+                <div class="media-body">
+                    <h4 class="media-heading"><a href="{{pathFor 'realtyPage'}}">{{title}}</a></h4>
+                    <div class="media">
+                        <table class="table table-striped">                          
+                            <tr><td></td><td>{{text}}</td></tr>
+                            <tr><td></td><td>{{area}}</td></tr>
+                            {{#if isList}}
+                            <tr><td></td><td>{{name}}</td></tr>
+                            <tr><td></td><td>{{phone}}</td></tr>
+                            <tr><td></td><td>{{address}}</td></tr>
+                            <tr><td></td><td>{{roomsId}}</td></tr>
+                            <tr><td></td><td>{{htmlvideo}}</td></tr>
+                            {{/if}}
+                        </table>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <h4>{{price}} р.</h4>
+        <div class="row-fluid">
+            <div class="span4">
+                {{#if ownPost}}
+                <a href="{{pathFor 'realtyEdit'}}" class="btn btn-small" data-toggle="tooltip" title="Изменить">Изменить</a>
+                <a href="##" id="delete-realty" class="btn btn-danger btn-small" data-toggle="tooltip" title="Удалить">Удалить</a>
+                {{/if}}
+            </div>
+            <div class="span8"></div>
+        </div>
+    </div>
+</template>
+
+<template name="realtyEdit">
+    <h4>Изменить объявление:</h4>
+    {{> realtyForm}}
+</template>
+
+<template name="realtySubmit">
+    <h4>Подать объявление:</h4>
+    {{> realtyForm}}
+</template>
+
+
+<template name="realtyForm">
+    <form class="form-horizontal" role="form">    
+       
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="name">Ваше имя:</label>
+            <div class="col-sm-4">
+                <input name="name" id="name" class="form-control" type="text" value="{{name}}" placeholder="" required="required"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="phone">Телефон:</label>
+            <div class="col-sm-4">
+                <input name="phone" id="phone" class="form-control" type="text" value="{{phone}}" required="required" placeholder="+9-999..."/>
+            </div>
+        </div>
+      
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="text">Город:</label>
+            <div class="col-sm-4">
+                <select name="cityId" placeholder="" class="form-control">
+                    {{#each cityAll}}
+                      {{> optionCity}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <input name="realtyType" id="realtyType" type="hidden"  value="{{realtyType}}" required="required" placeholder=""/>
+
+        <input name="realtyAdvertType" id="realtyAdvertType" type="hidden"  value="{{realtyAdvertType}}" required="required" placeholder=""/>
+           
+      
+      
+        {{>realtyTypeOptions}}
+      
+        <br>
+        <br>
+      
+        {{>advertType}}               
+               
+        <br>
+        <br>
+     
+        {{>realtyFormOptions}}
+                 
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="price">Цена:</label>
+            <div class="col-sm-4">
+                <input name="price" id="price" class="form-control" type="number"  value="{{price}}" required="required" placeholder=""/>
+            </div>
+        </div>
+      
+      
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="text">Описание:</label>
+            <div class="col-sm-4">
+                <textarea name="text" id="text" required="required" placeholder="" rows="7" class="form-control">{{text}}</textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="video">Видео</label>
+            <div class="col-sm-4">
+                <input name="video" id="video" class="form-control" type="text" value="{{video}}" placeholder=""/>
+            </div>
+        </div>
+
+<!--         <div class="form-group">
+            <label class="col-sm-2 control-label" for="realtyfileinput">Изображение:</label>
+            <div class="col-sm-4">
+                <input id="realtyfileinput" name="images" type="file" class="form-control"/>
+            </div>
+        </div> -->
+        <br>    
+        <input type="submit" value="Далее" class="btn btn-default"/>   
+        <br>
+        <br>     
+    </form>
+</template>
+
+<!-- END REALTY -->
+<!-- OPTION -->
+<template name="optionRooms">
+    <option value="{{this._id}}" {{selected ../roomsId}}>{{title}}</option>
+</template>
+<template name="optionCity">
+    <option value="{{this._id}}" {{selected ../cityId}}>{{title}}</option>
+</template>
+<template name="optionCountry">
+    <option value="{{this._id}}" {{selected ../countryId}}>{{title}}</option>
+</template>
+<template name="optionAge">
+    <option value="{{this._id}}" {{selected ../age}}>{{title}}</option>
+</template>
+<template name="optionFloor">
+    <option value="{{this._id}}" {{selected ../floor}}>{{title}}</option>
+</template>
+<template name="optionFloorCount">
+    <option value="{{this._id}}" {{selected ../floorCount}}>{{title}}</option>
+</template>
+<template name="optionRentTime">
+    <option value="{{this._id}}" {{selected ../rentTime}}>{{title}}</option>
+</template>
+<template name="optionHouseType">
+    <option value="{{this._id}}" {{selected ../houseType}}>{{title}}</option>
+</template>
+<template name="optionLocation">
+    <option value="{{this._id}}" {{selected ../location}}>{{title}}</option>
+</template>
+<template name="optionLandСategory">
+    <option value="{{this._id}}" {{selected ../landСategory}}>{{title}}</option>
+</template>
+<template name="optionGarageType">
+    <option value="{{this._id}}" {{selected ../garageType}}>{{title}}</option>
+</template>
+<template name="optionBusinessType">
+    <option value="{{this._id}}" {{selected ../businessType}}>{{title}}</option>
+</template>
+<template name="optionForeignType">
+    <option value="{{this._id}}" {{selected ../foreignType}}>{{title}}</option>
+</template>
+<!-- END OPTION -->
+
+<template name="advertType">
+  <div class="btn-group" data-toggle="buttons"> 
+<!--     <button id="sell" type="button" class="btn btn-default btn-small">Продам</button>
+    <button id="rent" type="button" class="btn btn-default btn-small">Сдам</button>
+    <button id="irent" type="button" class="btn btn-default btn-small">Сниму</button>
+    <button id="buy" type="button" class="btn btn-default btn-small">Куплю</button> -->
+    <label class="btn btn-default">
+      <input type="radio" id="sell" autocomplete="off"> Продам
+    </label>
+      <label class="btn btn-default">
+      <input type="radio" id="rent" autocomplete="off"> Сдам 
+    </label>
+    <label class="btn btn-default">
+      <input type="radio" id="irent" autocomplete="off"> Сниму
+    </label>
+    <label class="btn btn-default">
+      <input type="radio" id="buy" autocomplete="off"> Куплю
+    </label>
+  </div>  
+</template>
+
+<template name="realtyTypeOptions">
+  <div class="btn-group" data-toggle="buttons"> 
+<!--       <button id="apartment" type="button" class="btn btn-default btn-small">Квартира, комната</button>
+      <button id="house" type="button" class="btn btn-default btn-small">Дом, дача, котедж</button>
+      <button id="parcel" type="button" class="btn btn-default btn-small">Земельный, участок</button>
+      <button id="garage" type="button" class="btn btn-default btn-small">Гараж, машиноместо</button>
+      <button id="business" type="button" class="btn btn-default btn-small">Коммерческая</button>
+      <button id="foreign" type="button" class="btn btn-default btn-small">За рубежом</button>   -->
+      <label class="btn btn-default">
+        <input id="apartment" type="radio" autocomplete="off"> Квартира, комната
+      </label>
+        <label class="btn btn-default">
+        <input id="house" type="radio" autocomplete="off"> Дом, дача, котедж
+      </label>
+      <label class="btn btn-default">
+        <input id="parcel" type="radio" autocomplete="off"> Земельный, участок
+      </label>
+      <label class="btn btn-default">
+        <input id="garage" type="radio" autocomplete="off"> Гараж, машиноместо
+      </label> 
+      <label class="btn btn-default">
+        <input id="business" type="radio" autocomplete="off"> Коммерческая
+      </label>
+      <label class="btn btn-default">
+        <input id="foreign" type="radio" autocomplete="off"> За рубежом
+      </label>
+    
+  </div>  
+</template>
+
+<template name="realtyFormOptions">
+        
+  
+        <div class="form-group" id="addressBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="address">Адрес:</label>
+            <div class="col-sm-4">
+                <input name="address" id="address" class="form-control" type="text"  value="{{address}}"/>
+            </div>
+        </div>
+      
+        <div class="form-group" id="ageBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="age">Возраст:</label>
+            <div class="col-sm-4">
+                 <select name="age" placeholder="" class="form-control" >
+                    {{#each ageAll}}
+                      {{> optionAge}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+            
+        <div class="form-group" id="floorBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="floor">Этаж:</label>
+            <div class="col-sm-4">
+                <select name="floor" class="form-control" placeholder="">
+                    {{#each floorAll}}
+                      {{> optionFloor}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="floorCountBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="floorCount">Всего этажей:</label>
+            <div class="col-sm-4">
+                <select name="floorCount" class="form-control" placeholder="">
+                    {{#each floorCountAll}}
+                      {{> optionFloorCount}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="rentTimeBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="rentTime">Тип аренды:</label>
+            <div class="col-sm-4">
+                <select name="rentTime" class="form-control" placeholder="">
+                    {{#each rentTimeAll}}
+                      {{> optionRentTime}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group"  id="houseTypeBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="houseType">Вид объекта (дом):</label>
+            <div class="col-sm-4">
+                <select name="houseType" class="form-control" placeholder="">
+                    {{#each houseTypeAll}}
+                      {{> optionHouseType}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+       <div class="form-group" id="distanceToCityBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="distanceToCity">Расстояние до города:</label>
+            <div class="col-sm-4">
+                <input name="distanceToCity" class="form-control" id="distanceToCity" type="text"  value="{{distanceToCity}}" />
+            </div>
+        </div>
+      
+        <div class="form-group" id="plotAreaBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="plotArea">Площадь участка:</label>
+            <div class="col-sm-4">
+                <input name="plotArea" class="form-control" id="plotArea" type="text"  value="{{plotArea}}" />
+            </div>
+        </div>
+      
+        <div class="form-group" id="locationBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="location">Местонахождение:</label>
+            <div class="col-sm-4">
+                 <select name="location" class="form-control" placeholder="">
+                    {{#each locationAll}}
+                      {{> optionLocation}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="landСategoryBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="landСategory">Категория земель:</label>
+            <div class="col-sm-4">
+                <select name="landСategory" class="form-control" placeholder="">
+                    {{#each landСategoryAll}}
+                      {{> optionLandСategory}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="garageTypeBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="garageType">Вид объекта (гараж):</label>
+            <div class="col-sm-4">
+                <select name="garageType" class="form-control" placeholder="">
+                    {{#each garageTypeAll}}
+                      {{> optionGarageType}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="businessTypeBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="businessType">Вид объекта (коммерческая):</label>
+            <div class="col-sm-4">
+                <select name="businessType" class="form-control" placeholder="">
+                    {{#each businessTypeAll}}
+                      {{> optionBusinessType}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+       <div class="form-group" id="foreignTypeBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="foreignType">Вид объекта (зарубежная):</label>
+            <div class="col-sm-4">
+                 <select name="foreignType" class="form-control" placeholder="">
+                    {{#each foreignTypeAll}}
+                      {{> optionForeignType}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+      
+        <div class="form-group" id="countryIdBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="countryId">Страна:</label>
+            <div class="col-sm-4">
+                <select name="countryId" class="form-control" placeholder="">
+                    {{#each countryAll}}
+                      {{> optionCountry}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" id="roomsIdBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="roomsId">Количество комнат:</label>
+            <div class="col-sm-4">
+                <select name="roomsId" class="form-control" placeholder="">
+                    {{#each realtyRooms}}
+                    {{> optionRooms}}
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" id="areaBlock" style="display:none;">
+            <label class="col-sm-2 control-label" for="area">Площадь м2:</label>
+            <div class="col-sm-4">
+                <input name="area" id="area" class="form-control" type="text"  value="{{area}}"/>
+            </div>
+        </div>
+</template>
