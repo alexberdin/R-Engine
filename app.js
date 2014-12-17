@@ -9,6 +9,7 @@ Used Packages:
     add ian:accounts-ui-bootstrap-3,
     add sacha:spin,
     add accounts-password,
+    add dbarrett:dropzonejs
     ? meteorhacks:kadira
 */
 
@@ -98,13 +99,10 @@ FuncProvider = {
             var meteoruser = Meteor.userId();
             var reader = new FileReader();
             reader.onload = function (e) {
-//                 var imagesOne = Images.findOne({realtyId: realtyId});
-//                 if (imagesOne) {
-//                     Images.update(imagesOne._id, {$set: {src: e.target.result, userId: meteoruser, date: new Date(), realtyId: realtyId}});
-//                 } else {
+              var countImages = Images.find({realtyId:realtyId}).count()
+              if(countImages<5 && file.size<1048576){
                    saveImgId = Images.insert({src: e.target.result, userId: meteoruser, date: new Date(), realtyId: realtyId});
-//               console.log(saveImgId);
-//                 }
+              }
             };
             reader.readAsDataURL(file);
         }
@@ -153,7 +151,7 @@ FuncProvider = {
                 $("#"+item.id).css("display","block");   
             } else {  
 //                console.log($("#"+item.id));
-              $("#"+item.id).css("display","none"); 
+                $("#"+item.id).css("display","none"); 
             }      
         }); 
     }
@@ -169,7 +167,8 @@ Images.allow({
     insert: function (userId, doc) {
         return Meteor.userId();
     },
-    update: FuncProvider.ownsDocument
+    update: FuncProvider.ownsDocument,
+    remove: FuncProvider.ownsDocument
 });
 
 Realty = new Meteor.Collection('realty');
@@ -359,7 +358,10 @@ if (Meteor.isClient) {
         ownPost: FuncProvider.ownObject,
         realtyType: FuncProvider.realtyType,
         images: function () {
-            return Images.findOne({realtyId: this._id});
+              var i = 0
+              var Img = Images.find({realtyId: this._id}).map(function(a){ a.id=i++; a.active = ""; return a; });
+              Img[0].active = "active";
+              return Img;
         },
         htmlvideo: function () {
             return this.video;
@@ -368,6 +370,8 @@ if (Meteor.isClient) {
             return Router.current().route.getName() !== 'realtyList';
         }
     });
+              
+  
 
     Template.realtyItem.events({
         'click #delete-realty': function (e) {
@@ -432,8 +436,7 @@ if (Meteor.isClient) {
     });
   
     Template.advertType.events({
-      'click label':function(e,template){    
-        console.log(e);
+      'click label':function(e,template){  
         e.preventDefault();
         var id = $(e.target).find('input').attr('id');
         Session.set('advertTypeForm',id);
@@ -555,8 +558,10 @@ if (Meteor.isClient) {
     Template.realtyEdit.rendered = function(){ 
         Session.set('advertTypeForm',this.data.realtyAdvertType);
         Session.set('realtyTypeForm',this.data.realtyType); 
-        $("button#"+this.data.realtyType).click();
-        $("button#"+this.data.realtyAdvertType).click();
+//       console.log(this.data.realtyAdvertType);
+//       console.log(this.data.realtyType);
+        $("input#"+this.data.realtyType).parent().click();
+        $("input#"+this.data.realtyAdvertType).parent().click(); 
     };
           
     Template.addImages.events({
@@ -567,14 +572,23 @@ if (Meteor.isClient) {
       
     });
 
+    Template.addImages.helpers({
+        images: function(){
+          return Images.find({realtyId:this._id});
+        }
+    });
+          
     Template.addImages.rendered = function(){
+      
         var realtyId = this.data._id;
+        var countImages = Images.find({realtyId:realtyId}).count();
         var arrayOfImageIds = [];
         Dropzone.autoDiscover = false;
         Dropzone.createImageThumbnails = true;
         var dropzone = new Dropzone("form#dropzone", {
                 acceptedFiles: ".jpeg,.jpg,.png,.gif,.JPEG,.JPG,.PNG,.GIF",
                 dictDefaultMessage: "Добавьте изображение",
+                dictFileTooBig: "Файл слишком большой",
                 dictMaxFilesExceeded: "Вы можете ддобавить не более 5 изображений",
                 dictRemoveFile:"Удалить",
                 dictCancelUpload:"Отмена",
@@ -585,24 +599,26 @@ if (Meteor.isClient) {
                 uploadMultiple: false, 
                 addRemoveLinks: true,
                 init: function() {
-                  this.on("totaluploadprogress", function(progress, totalBytes) {
+                                 
+                  this.on("uploadprogress", function(file,progress,totalBytes) {
 //                     console.log("File progress", progress);
                     if(progress===100){
-                       $("#next-button").fadeIn(1000);
+                      //$("#next-button").fadeIn(1000);
+                      this.removeFile(file);
 //                        console.log("All progress");
 //                       console.log(arrayOfImageIds);
                     }
                   });
+                  this.on("queuecomplete",function(files){
+//                     console.log(files);
+//                     $("#next-button").fadeIn(1000);
+                    
+                  });
                   this.on("addedfile",function(file){
-                      var id = FuncProvider.saveRealtyImages(file, realtyId);
-                      console.log(id);
-                      arrayOfImageIds[file.name] = id;  
+                      FuncProvider.saveRealtyImages(file, realtyId);                   
                   });
                   this.on("removedfile", function(file) {
-//                       console.log("remove");
-//                       console.log(file.name);
-//                       console.log(arrayOfImageIds);
-//                     console.log(arrayOfImageIds); 
+//                      
                   });
                 },
                 maxfilesexceeded: function(file) {
@@ -615,9 +631,13 @@ if (Meteor.isClient) {
 //                     done();
 //                 }
         });
-     }
+    }
     
-   
+   Template.editImages.events({
+     'click #delete-edit-images':function(){
+       Images.remove(this._id);
+     }
+   });
 
     Deps.autorun(function () {
       var connected = Meteor.status().connected;     
