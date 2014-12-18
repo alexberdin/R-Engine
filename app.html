@@ -17,6 +17,7 @@
         <ul class="nav navbar-nav">
              {{#if currentUser}}
                    <li><a class="" href="{{pathFor 'realtySubmit'}}">Подать объявление</a></li>
+                    <li><a class="" href="{{pathFor 'books'}}">Test AutoForm</a></li>
              {{/if}}
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -496,4 +497,12 @@
                 <input name="area" id="area" class="form-control" type="text"  value="{{area}}"/>
             </div>
         </div>
+</template>
+
+<template name="books">
+  {{>insertBookForm}}
+  
+</template>
+<template name="insertBookForm">
+  {{> quickForm collection="Books" id="insertBookForm" type="insert"}}
 </template>

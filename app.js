@@ -9,6 +9,8 @@ Used Packages:
     add accounts-password,
     add dbarrett:dropzonejs
     ? meteorhacks:kadira
+    add aldeed:autoform
+    add aldeed:collection2
 */
 
 FuncProvider = {
@@ -64,9 +66,9 @@ FuncProvider = {
     },
     realtyPopulate: function (e) {
         return  {            
-            text: $(e.target).find('[name=text]').val(),
-            name: $(e.target).find('[name=name]').val(),
-            cityId: $(e.target).find('[name=cityId]').val(),
+            text: e.target.text.value,//$(e.target).find('[name=text]').val(),
+            name: e.target.name.value,//$(e.target).find('[name=name]').val(),
+            cityId: e.target.cityId.value,//$(e.target).find('[name=cityId]').val(),
             age: $(e.target).find('[name=age]').val(),
             floor:$(e.target).find('[name=floor]').val(),
             floorCount:$(e.target).find('[name=floorCount]').val(),
@@ -92,19 +94,17 @@ FuncProvider = {
     },
 
     saveRealtyImages: function (file, realtyId) {
-      saveImgId = null;  
       if (file) {
             var meteoruser = Meteor.userId();
             var reader = new FileReader();
+            reader.readAsDataURL(file);
             reader.onload = function (e) {
               var countImages = Images.find({realtyId:realtyId}).count()
-              if(countImages<5 && file.size<1048576){
-                   saveImgId = Images.insert({src: e.target.result, userId: meteoruser, date: new Date(), realtyId: realtyId});
+              if(countImages<5 && file.size<1048576){ // 1 mb
+                   Images.insert({src: e.target.result, userId: meteoruser, date: new Date(), realtyId: realtyId});
               }
-            };
-            reader.readAsDataURL(file);
+           };            
         }
-        return saveImgId;
     },
     visibleRealtyFormOptions: function(){
         var rt = Session.get('realtyTypeForm');
@@ -135,23 +135,20 @@ FuncProvider = {
             "housesell","houserent","businessrent","businessbuy",
             "garagesell","garagerent"]},
         ];
-         
-        function in_array(what, where) {
+                
+        arrManipulateIds.map(function(item){  
+            if(FuncProvider.inArray(currentState,item.visible)){
+                $("#"+item.id).css("display","block");   
+            } else {  
+                $("#"+item.id).css("display","none"); 
+            }      
+        }); 
+    },
+    inArray: function(what, where) {
             for(var i=0; i<where.length; i++)
                 if(what == where[i])
                     return true;
             return false;
-        }
-        
-        arrManipulateIds.map(function(item){  
-            if(in_array(currentState,item.visible)){
-//                 console.log($("#"+item.id));
-                $("#"+item.id).css("display","block");   
-            } else {  
-//                console.log($("#"+item.id));
-                $("#"+item.id).css("display","none"); 
-            }      
-        }); 
     }
 };
 
@@ -188,6 +185,47 @@ Realty.deny({
                           'realtyAdvertType', 'price', 'video').length > 0);
     }
 });
+Task = new Meteor.Collection("task");
+Task.allow({
+    insert: function (userId, doc) {
+        return Meteor.userId();
+    },
+    update: FuncProvider.ownsDocument,
+    remove: FuncProvider.ownsDocument
+});
+
+
+Books = new Mongo.Collection("books");
+Books.attachSchema(new SimpleSchema({
+  title: {
+    type: String,
+    label: "Title",
+    max: 200
+  },
+  author: {
+    type: String,
+    label: "Author"
+  },
+  copies: {
+    type: Number,
+    label: "Number of copies",
+    min: 0
+  },
+  lastCheckedOut: {
+    type: Date,
+    label: "Last date this book was checked out",
+    optional: true
+  },
+  summary: {
+    type: String,
+    label: "Brief summary",
+    optional: true,
+    max: 1000
+  }
+}));
+
+
+
 
 Meteor.methods({
     realtyInsert: function (realtyAttributes) {
@@ -219,13 +257,6 @@ Meteor.methods({
             video: String
         });
 
-        var realtyWithSameLink = Realty.findOne({text: realtyAttributes.text});
-        if (realtyWithSameLink) {
-            return {
-                realtyExists: true,
-                _id: realtyWithSameLink._id 
-            }
-        }
         var user = Meteor.user();
         var realty = _.extend(realtyAttributes, {
             userId: user._id,
@@ -235,7 +266,18 @@ Meteor.methods({
 
         realtyId = Realty.insert(realty);
         return { _id: realtyId};
-    }
+    },
+//     taskSubmit:function(rawFormData,templ){
+//         Mesosphere.taskForm.validate(rawFormData, function(errors, formFieldsObject){
+//             if(!errors){
+//                console.log("err",formFieldsObject);
+//             }else{
+//                console.log("not err",formFieldsObject);
+//             }
+            
+//         });
+//         return false;
+//     }
 });
 
 
@@ -261,6 +303,9 @@ Meteor.publish('city', function () {
 });
 Meteor.publish('country', function () {
     return Country.find();
+});
+Meteor.publish('task', function () {
+    return Task.find();
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -339,6 +384,13 @@ if (Meteor.isClient) {
                 return Realty.findOne(this.params._id);
             },
         });
+        this.route('taskList',{
+              path:"/taskList",
+              data: function(){
+                return Task.find();
+            },
+        });
+              this.route('books',{path:"/books"});
 
     });
 
@@ -357,7 +409,7 @@ if (Meteor.isClient) {
         realtyType: FuncProvider.realtyType,
         images: function () {
               var i = 0
-              var Img = Images.find({realtyId: this._id}).map(function(a){ a.id=i++; a.active = ""; return a; });
+              var Img = Images.find({realtyId: this._id}).map(function(a){ a.id=i++; a.active = null; return a; });
               Img[0].active = "active";
               return Img;
         },
@@ -497,8 +549,7 @@ if (Meteor.isClient) {
     Template.optionBusinessType.helpers({
         selected: FuncProvider.selectedOption
     });
-    
-          
+              
     Template.optionForeignType.helpers({
         selected: FuncProvider.selectedOption
     });
@@ -599,17 +650,11 @@ if (Meteor.isClient) {
                 init: function() {
                                  
                   this.on("uploadprogress", function(file,progress,totalBytes) {
-//                     console.log("File progress", progress);
                     if(progress===100){
-                      //$("#next-button").fadeIn(1000);
                       this.removeFile(file);
-//                        console.log("All progress");
-//                       console.log(arrayOfImageIds);
                     }
                   });
                   this.on("queuecomplete",function(files){
-//                     console.log(files);
-//                     $("#next-button").fadeIn(1000);
                     
                   });
                   this.on("addedfile",function(file){
@@ -622,12 +667,6 @@ if (Meteor.isClient) {
                 maxfilesexceeded: function(file) {
                     this.removeFile(file);
                 },
-//                 accept: function(file, done){
-//                     var id = FuncProvider.saveRealtyImages(file, realtyId);
-//                     console.log(id);
-//                     arrayOfImageIds[file.name] = id;
-//                     done();
-//                 }
         });
     }
     
@@ -643,10 +682,22 @@ if (Meteor.isClient) {
     });
     
 
-    Template.connection_tpl.helpers({
+   Template.connection_tpl.helpers({
       connection_status:function () {
           return Session.get("connected") ? true : false;
       }
     });
+  
+  AutoForm.addHooks(['insertBookForm'], {
+    after: {
+      insert: function(error, result) {
+        if (error) {
+          console.log("Insert Error:", error);
+        } else {
+          console.log("Insert Result:", result);
+        }
+      }
+    }
+  });
 
 }///// END CLIENT //////////////////////////
