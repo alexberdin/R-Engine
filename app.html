@@ -17,8 +17,12 @@
         <ul class="nav navbar-nav">
              {{#if currentUser}}
                    <li><a class="" href="{{pathFor 'realtySubmit'}}">Подать объявление</a></li>
-                    <li><a class="" href="{{pathFor 'books'}}">Test AutoForm</a></li>
+                   <li><a class="" href="{{pathFor 'insertNR'}}">new nr</a></li>
+                   <li><a class="" href="{{pathFor 'nrList'}}">nr list</a></li>
              {{/if}}
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="##"></a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="##"></a></li>
@@ -38,9 +42,9 @@
     <br>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-3 col-md-2"><span class="glyphicon glyphicon-list" aria-hidden="true"></span></div>
+            <div class="col-xs-3 col-md-2"><!--span class="glyphicon glyphicon-list" aria-hidden="true"></span--> </div>
             <div class="col-xs-12 col-sm-6 col-md-8">{{> yield}}</div>
-            <div class="col-xs-3 col-md-2"><span class="glyphicon glyphicon-list glyphicon-align-right" aria-hidden="true"></span>          </div>
+            <div class="col-xs-3 col-md-2"><!--span class="glyphicon glyphicon-list glyphicon-align-right" aria-hidden="true"></span--> </div>
         </div>
     </div>
 </template>
@@ -106,9 +110,13 @@
     </div> 
    </div>
 </template>
+
+
+
 <template name="realtyItem">
     <div class="row">    
        <div class="col-sm-6 col-md-4">
+         {{#if images}}
            <div id="carousel-example-generic-{{_id}}" class="carousel slide" data-ride="carousel" data-interval="100000"> 
               <ol class="carousel-indicators">
                 {{#each images}}
@@ -135,12 +143,12 @@
                 <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                 <span class="sr-only">Next</span>
               </a>  
-            </div>           
+            </div>           {{/if}}  
         </div>        
         <div class="col-sm-8 col-md-6"> 
                 <a href="{{pathFor 'realtyPage'}}" class="btn btn-default btn-xs">Смотреть</a>
                 {{#if ownPost}}
-                <a href="{{pathFor 'realtyEdit'}}" class="btn btn-default btn-xs">Изменить</a>
+                <a href="{{pathFor 'updateNR'}}" class="btn btn-default btn-xs">Изменить</a>
                 <a href="##" id="delete-realty" class="btn btn-danger btn-xs">Удалить</a>
                 {{/if}}            
         </div>         
@@ -150,7 +158,8 @@
 
 <template name="realtyEdit">
     <h4>Изменить объявление:</h4>
-    {{> realtyForm}}
+<!--     {{> realtyForm}} -->
+  {{>insertNR}}  
 </template>
 
 <template name="realtySubmit">
@@ -227,13 +236,6 @@
                 <input name="video" id="video" class="form-control" type="text" value="{{video}}" placeholder=""/>
             </div>
         </div>
-
-<!--         <div class="form-group">
-            <label class="col-sm-2 control-label" for="realtyfileinput">Изображение:</label>
-            <div class="col-sm-4">
-                <input id="realtyfileinput" name="images" type="file" class="form-control"/>
-            </div>
-        </div> -->
         <br>    
         <input type="submit" value="Далее" class="btn btn-default"/>   
         <br>
@@ -247,10 +249,10 @@
     <option value="{{this._id}}" {{selected ../roomsId}}>{{title}}</option>
 </template>
 <template name="optionCity">
-    <option value="{{this._id}}" {{selected ../cityId}}>{{title}}</option>
+    <option value="{{this._id}}" {{selected ../cityId}}>{{label}}</option>
 </template>
 <template name="optionCountry">
-    <option value="{{this._id}}" {{selected ../countryId}}>{{title}}</option>
+    <option value="{{this._id}}" {{selected ../countryId}}>{{label}}</option>
 </template>
 <template name="optionAge">
     <option value="{{this._id}}" {{selected ../age}}>{{title}}</option>
@@ -307,12 +309,7 @@
 
 <template name="realtyTypeOptions">
   <div class="btn-group" data-toggle="buttons"> 
-<!--       <button id="apartment" type="button" class="btn btn-default btn-small">Квартира, комната</button>
-      <button id="house" type="button" class="btn btn-default btn-small">Дом, дача, котедж</button>
-      <button id="parcel" type="button" class="btn btn-default btn-small">Земельный, участок</button>
-      <button id="garage" type="button" class="btn btn-default btn-small">Гараж, машиноместо</button>
-      <button id="business" type="button" class="btn btn-default btn-small">Коммерческая</button>
-      <button id="foreign" type="button" class="btn btn-default btn-small">За рубежом</button>   -->
+
       <label class="btn btn-default">
         <input id="apartment" type="radio" autocomplete="off"> Квартира, комната
       </label>
@@ -499,10 +496,126 @@
         </div>
 </template>
 
-<template name="books">
-  {{>insertBookForm}}
-  
+
+
+<template name="nrPanel">
+      <br />
+      <br />
+   {{>insertNR}}  
+      <br />
+      <br />
+<!--    {{>nrList}} -->
 </template>
-<template name="insertBookForm">
-  {{> quickForm collection="Books" id="insertBookForm" type="insert"}}
+
+
+<template name="insertNR">
+  {{#autoForm collection="NR" id="insertNR" type="insert" template="bootstrap3-horizontal" label-class="col-sm-3" input-col-class="col-sm-9"}}
+        {{>nrForm}}
+  {{/autoForm}}
 </template>
+<template name="updateNR">
+  {{#autoForm collection="NR" id="insertNR" doc=this type="update" template="bootstrap3-horizontal" label-class="col-sm-3" input-col-class="col-sm-9"}}
+        {{>nrForm}}
+  {{/autoForm}}
+</template>
+
+
+<template name="nrForm">
+  <fieldset>
+      <legend>Add a NR</legend>
+      {{> afQuickField name='text'}}
+      {{> afQuickField name='name'}}
+      {{> afQuickField name='phone'}}
+      {{> afQuickField name='cityId'}}
+    
+    
+      {{> afQuickField name='realtyType'}}
+    
+      {{> afQuickField name='realtyAdvertType'}}
+      
+      {{>realtyTypeOptions}}
+      
+      <br>
+      <br>
+      
+      {{>advertType}}     
+      
+      <br>
+      <br>
+      
+      <div id="ageBlock" style="display:none">
+        {{> afQuickField name='age'}} 
+      </div>
+      <div id="floorBlock" style="display:none">
+        {{> afQuickField name='floor'}}
+      </div>
+      <div id="floorCountBlock" style="display:none">
+        {{> afQuickField name='floorCount'}}
+      </div>
+      <div id="rentTimeBlock" style="display:none">
+        {{> afQuickField name='rentTime'}}
+      </div>
+      <div id="houseTypeBlock" style="display:none">
+        {{> afQuickField name='houseType'}}
+      </div>
+      <div id="distanceToCityBlock" style="display:none">
+        {{> afQuickField name='distanceToCity'}}
+      </div>
+      <div id="plotAreaBlock" style="display:none">
+        {{> afQuickField name='plotArea'}}
+      </div>
+      <div id="locationBlock" style="display:none">
+        {{> afQuickField name='location'}}
+      </div>
+      <div id="landСategoryBlock" style="display:none">
+        {{> afQuickField name='landСategory'}}
+      </div>
+      <div id="garageTypeBlock" style="display:none">
+        {{> afQuickField name='garageType'}}
+      </div>
+      <div id="businessTypeBlock" style="display:none">
+        {{> afQuickField name='businessType'}}
+      </div>
+      <div id="foreignTypeBlock" style="display:none">
+        {{> afQuickField name='foreignType'}}
+      </div>
+      <div id="countryIdBlock" style="display:none">
+        {{> afQuickField name='countryId'}}
+      </div>
+      <div id="addressBlock" style="display:none">
+        {{> afQuickField name='address'}}
+      </div>
+      <div id="areaBlock" style="display:none">
+        {{> afQuickField name='area'}}
+      </div>
+      <div id="roomsIdBlock" style="display:none">
+        {{> afQuickField name='roomsId'}}
+      </div>
+      <div id="">
+        {{> afQuickField name='price'}}
+      </div> 
+        {{> afQuickField name='video'}}
+        
+    </fieldset>
+    <button type="submit" class="btn btn-primary">Далее</button>
+</template>
+
+
+<template name="nrList">
+  <hr />
+  {{#each NR}}
+<!--       <div class="well">{{text}}</div> -->
+            {{> realtyItem}}
+  {{/each}}
+  {{#if nextPath}}
+      <a class="btn btn-default" href="{{nextPath}}">Загрузить ещё</a>
+  {{else}}
+      {{#unless ready}}
+        {{> spinner}}
+      {{/unless}}
+  {{/if}}
+  <br />
+  <br />
+</template>
+
+
