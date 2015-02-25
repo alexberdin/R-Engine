@@ -3,9 +3,10 @@
     <title>R-Engine</title>
 </head>
 <!-- LAYOUT -->
-<template name="layout"><div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<template name="layout">
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div class="navbar-header">
-        <a class="navbar-brand" href="{{pathFor 'realtyList'}}">R-Engine </a>
+        <a class="navbar-brand" href="{{pathFor 'nrList'}}">R-Engine</a>
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
@@ -16,9 +17,8 @@
     <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
              {{#if currentUser}}
-                   <li><a class="" href="{{pathFor 'realtySubmit'}}">Подать объявление</a></li>
-                   <li><a class="" href="{{pathFor 'insertNR'}}">new nr</a></li>
-                   <li><a class="" href="{{pathFor 'nrList'}}">nr list</a></li>
+                   <li><a class="" href="{{pathFor 'insertNR'}}">Подать объявление</a></li>
+                   <li><a class="" href="{{pathFor 'nrList'}}">Список оъявлений</a></li>
              {{/if}}
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -42,9 +42,9 @@
     <br>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-3 col-md-2"><!--span class="glyphicon glyphicon-list" aria-hidden="true"></span--> </div>
+            <div class="col-xs-3 col-md-2"></div>
             <div class="col-xs-12 col-sm-6 col-md-8">{{> yield}}</div>
-            <div class="col-xs-3 col-md-2"><!--span class="glyphicon glyphicon-list glyphicon-align-right" aria-hidden="true"></span--> </div>
+            <div class="col-xs-3 col-md-2"></div>
         </div>
     </div>
 </template>
@@ -70,21 +70,6 @@
   {{/if}}
 </template>
 <!-- END INCLUDES -->
-
-
-<!-- REALTY -->
-<template name="realtyList">
-    <div>
-        {{#each realty}}
-          {{> realtyItem}}
-        {{/each}}
-    </div>
-</template>
-
-
-<template name="realtyPage">
-    {{> realtyItem}}
-</template>
 
 <template name="addImages"> 
     <div class="row">
@@ -143,10 +128,12 @@
                 <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                 <span class="sr-only">Next</span>
               </a>  
-            </div>           {{/if}}  
+            </div>           
+         {{/if}}  
+         {{text}}
+         {{name}}
         </div>        
         <div class="col-sm-8 col-md-6"> 
-                <a href="{{pathFor 'realtyPage'}}" class="btn btn-default btn-xs">Смотреть</a>
                 {{#if ownPost}}
                 <a href="{{pathFor 'updateNR'}}" class="btn btn-default btn-xs">Изменить</a>
                 <a href="##" id="delete-realty" class="btn btn-danger btn-xs">Удалить</a>
@@ -157,141 +144,15 @@
 </template>
 
 <template name="realtyEdit">
-    <h4>Изменить объявление:</h4>
-<!--     {{> realtyForm}} -->
-  {{>insertNR}}  
-</template>
-
-<template name="realtySubmit">
-    <h4>Подать объявление:</h4>
-    {{> realtyForm}}
+        <h4>Изменить объявление:</h4>
+        {{>insertNR}}  
 </template>
 
 
-<template name="realtyForm">
-    <form class="form-horizontal" role="form">    
-       
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="name">Ваше имя:</label>
-            <div class="col-sm-4">
-                <input name="name" id="name" class="form-control" type="text" value="{{name}}" placeholder="" required="required"/>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="phone">Телефон:</label>
-            <div class="col-sm-4">
-                <input name="phone" id="phone" class="form-control" type="text" value="{{phone}}" required="required" placeholder="+9-999..."/>
-            </div>
-        </div>
-      
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="text">Город:</label>
-            <div class="col-sm-4">
-                <select name="cityId" placeholder="" class="form-control">
-                    {{#each cityAll}}
-                      {{> optionCity}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <input name="realtyType" id="realtyType" type="hidden"  value="{{realtyType}}" required="required" placeholder=""/>
-
-        <input name="realtyAdvertType" id="realtyAdvertType" type="hidden"  value="{{realtyAdvertType}}" required="required" placeholder=""/>
-           
-      
-      
-        {{>realtyTypeOptions}}
-      
-        <br>
-        <br>
-      
-        {{>advertType}}               
-               
-        <br>
-        <br>
-     
-        {{>realtyFormOptions}}
-                 
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="price">Цена:</label>
-            <div class="col-sm-4">
-                <input name="price" id="price" class="form-control" type="number"  value="{{price}}" required="required" placeholder=""/>
-            </div>
-        </div>
-      
-      
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="text">Описание:</label>
-            <div class="col-sm-4">
-                <textarea name="text" id="text" required="required" placeholder="" rows="7" class="form-control">{{text}}</textarea>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="video">Видео</label>
-            <div class="col-sm-4">
-                <input name="video" id="video" class="form-control" type="text" value="{{video}}" placeholder=""/>
-            </div>
-        </div>
-        <br>    
-        <input type="submit" value="Далее" class="btn btn-default"/>   
-        <br>
-        <br>     
-    </form>
-</template>
-
-<!-- END REALTY -->
-<!-- OPTION -->
-<template name="optionRooms">
-    <option value="{{this._id}}" {{selected ../roomsId}}>{{title}}</option>
-</template>
-<template name="optionCity">
-    <option value="{{this._id}}" {{selected ../cityId}}>{{label}}</option>
-</template>
-<template name="optionCountry">
-    <option value="{{this._id}}" {{selected ../countryId}}>{{label}}</option>
-</template>
-<template name="optionAge">
-    <option value="{{this._id}}" {{selected ../age}}>{{title}}</option>
-</template>
-<template name="optionFloor">
-    <option value="{{this._id}}" {{selected ../floor}}>{{title}}</option>
-</template>
-<template name="optionFloorCount">
-    <option value="{{this._id}}" {{selected ../floorCount}}>{{title}}</option>
-</template>
-<template name="optionRentTime">
-    <option value="{{this._id}}" {{selected ../rentTime}}>{{title}}</option>
-</template>
-<template name="optionHouseType">
-    <option value="{{this._id}}" {{selected ../houseType}}>{{title}}</option>
-</template>
-<template name="optionLocation">
-    <option value="{{this._id}}" {{selected ../location}}>{{title}}</option>
-</template>
-<template name="optionLandСategory">
-    <option value="{{this._id}}" {{selected ../landСategory}}>{{title}}</option>
-</template>
-<template name="optionGarageType">
-    <option value="{{this._id}}" {{selected ../garageType}}>{{title}}</option>
-</template>
-<template name="optionBusinessType">
-    <option value="{{this._id}}" {{selected ../businessType}}>{{title}}</option>
-</template>
-<template name="optionForeignType">
-    <option value="{{this._id}}" {{selected ../foreignType}}>{{title}}</option>
-</template>
 <!-- END OPTION -->
 
 <template name="advertType">
   <div class="btn-group" data-toggle="buttons"> 
-<!--     <button id="sell" type="button" class="btn btn-default btn-small">Продам</button>
-    <button id="rent" type="button" class="btn btn-default btn-small">Сдам</button>
-    <button id="irent" type="button" class="btn btn-default btn-small">Сниму</button>
-    <button id="buy" type="button" class="btn btn-default btn-small">Куплю</button> -->
     <label class="btn btn-default">
       <input type="radio" id="sell" autocomplete="off"> Продам
     </label>
@@ -332,179 +193,10 @@
   </div>  
 </template>
 
-<template name="realtyFormOptions">
-        
-  
-        <div class="form-group" id="addressBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="address">Адрес:</label>
-            <div class="col-sm-4">
-                <input name="address" id="address" class="form-control" type="text"  value="{{address}}"/>
-            </div>
-        </div>
-      
-        <div class="form-group" id="ageBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="age">Возраст:</label>
-            <div class="col-sm-4">
-                 <select name="age" placeholder="" class="form-control" >
-                    {{#each ageAll}}
-                      {{> optionAge}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-            
-        <div class="form-group" id="floorBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="floor">Этаж:</label>
-            <div class="col-sm-4">
-                <select name="floor" class="form-control" placeholder="">
-                    {{#each floorAll}}
-                      {{> optionFloor}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="floorCountBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="floorCount">Всего этажей:</label>
-            <div class="col-sm-4">
-                <select name="floorCount" class="form-control" placeholder="">
-                    {{#each floorCountAll}}
-                      {{> optionFloorCount}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="rentTimeBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="rentTime">Тип аренды:</label>
-            <div class="col-sm-4">
-                <select name="rentTime" class="form-control" placeholder="">
-                    {{#each rentTimeAll}}
-                      {{> optionRentTime}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group"  id="houseTypeBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="houseType">Вид объекта (дом):</label>
-            <div class="col-sm-4">
-                <select name="houseType" class="form-control" placeholder="">
-                    {{#each houseTypeAll}}
-                      {{> optionHouseType}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-       <div class="form-group" id="distanceToCityBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="distanceToCity">Расстояние до города:</label>
-            <div class="col-sm-4">
-                <input name="distanceToCity" class="form-control" id="distanceToCity" type="text"  value="{{distanceToCity}}" />
-            </div>
-        </div>
-      
-        <div class="form-group" id="plotAreaBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="plotArea">Площадь участка:</label>
-            <div class="col-sm-4">
-                <input name="plotArea" class="form-control" id="plotArea" type="text"  value="{{plotArea}}" />
-            </div>
-        </div>
-      
-        <div class="form-group" id="locationBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="location">Местонахождение:</label>
-            <div class="col-sm-4">
-                 <select name="location" class="form-control" placeholder="">
-                    {{#each locationAll}}
-                      {{> optionLocation}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="landСategoryBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="landСategory">Категория земель:</label>
-            <div class="col-sm-4">
-                <select name="landСategory" class="form-control" placeholder="">
-                    {{#each landСategoryAll}}
-                      {{> optionLandСategory}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="garageTypeBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="garageType">Вид объекта (гараж):</label>
-            <div class="col-sm-4">
-                <select name="garageType" class="form-control" placeholder="">
-                    {{#each garageTypeAll}}
-                      {{> optionGarageType}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="businessTypeBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="businessType">Вид объекта (коммерческая):</label>
-            <div class="col-sm-4">
-                <select name="businessType" class="form-control" placeholder="">
-                    {{#each businessTypeAll}}
-                      {{> optionBusinessType}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-       <div class="form-group" id="foreignTypeBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="foreignType">Вид объекта (зарубежная):</label>
-            <div class="col-sm-4">
-                 <select name="foreignType" class="form-control" placeholder="">
-                    {{#each foreignTypeAll}}
-                      {{> optionForeignType}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-      
-        <div class="form-group" id="countryIdBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="countryId">Страна:</label>
-            <div class="col-sm-4">
-                <select name="countryId" class="form-control" placeholder="">
-                    {{#each countryAll}}
-                      {{> optionCountry}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group" id="roomsIdBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="roomsId">Количество комнат:</label>
-            <div class="col-sm-4">
-                <select name="roomsId" class="form-control" placeholder="">
-                    {{#each realtyRooms}}
-                    {{> optionRooms}}
-                    {{/each}}
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group" id="areaBlock" style="display:none;">
-            <label class="col-sm-2 control-label" for="area">Площадь м2:</label>
-            <div class="col-sm-4">
-                <input name="area" id="area" class="form-control" type="text"  value="{{area}}"/>
-            </div>
-        </div>
-</template>
-
 
 
 <template name="nrPanel">
-      <br />
-      <br />
-   {{>insertNR}}  
-      <br />
-      <br />
-<!--    {{>nrList}} -->
+   {{>insertNR}} 
 </template>
 
 
@@ -529,12 +221,15 @@
       {{> afQuickField name='cityId'}}
     
     
+      <div  style="display:none">
       {{> afQuickField name='realtyType'}}
-    
-      {{> afQuickField name='realtyAdvertType'}}
-      
-      {{>realtyTypeOptions}}
-      
+      </div>
+      <div  style="display:none">
+        {{> afQuickField name='realtyAdvertType'}}
+      </div> 
+        
+       {{>realtyTypeOptions}}
+     
       <br>
       <br>
       
@@ -600,11 +295,31 @@
     <button type="submit" class="btn btn-primary">Далее</button>
 </template>
 
+<!-- <template name="mainList">{{>nrList}}</template> -->
+
+
+<template name="searchPanel">
+  <div class="btn-group" data-toggle="buttons"> 
+    <label id="lsellSearch" class="btn btn-default">
+      <input type="radio" id="sellSearch" autocomplete="off"> Продам
+    </label>
+      <label class="btn btn-default">
+      <input type="radio" id="rentSearch" autocomplete="off"> Сдам 
+    </label>
+    <label class="btn btn-default">
+      <input type="radio" id="irentSearch" autocomplete="off"> Сниму
+    </label>
+    <label class="btn btn-default">
+      <input type="radio" id="buySearch" autocomplete="off"> Куплю
+    </label>
+  </div>  
+</template>
+
 
 <template name="nrList">
+  {{>searchPanel}}
   <hr />
   {{#each NR}}
-<!--       <div class="well">{{text}}</div> -->
             {{> realtyItem}}
   {{/each}}
   {{#if nextPath}}

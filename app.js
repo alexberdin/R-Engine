@@ -117,35 +117,6 @@ FuncProvider = {
       {value:"house",label:"Дом"},
       {value:"willage",label:"Вилла"}
     ],
-    realtyPopulate: function (e) {
-        var formData = e.target;
-        return  {            
-            text: formData.text.value,
-            name: formData.name.value,
-            cityId: formData.cityId.value,
-            age: formData.age.value,
-            floor:formData.floor.value,
-            floorCount:formData.floorCount.value,
-            rentTime:formData.rentTime.value,
-            houseType:formData.houseType.value,
-            distanceToCity:formData.distanceToCity.value,
-            plotArea:formData.plotArea.value,
-            location:formData.location.value,
-            landСategory:formData.landСategory.value,
-            garageType:formData.garageType.value,
-            businessType:formData.businessType.value,
-            foreignType:formData.foreignType.value,
-            countryId:formData.countryId.value,
-            phone: formData.phone.value,
-            realtyType: formData.realtyType.value,
-            realtyAdvertType: formData.realtyAdvertType.value,
-            address:formData.address.value,
-            area: formData.area.value,
-            roomsId: formData.roomsId.value,
-            price: formData.price.value,
-            video: formData.video.value,
-        };
-    },
     options:function(CollName){
         var options = [];
         CollName.find().map(function(item){
@@ -541,49 +512,13 @@ NR.attachSchema(new SimpleSchema({
     max: 200,
     optional: true,
   },
+  userId: {
+    type: String,
+    label: "user id",
+    max: 200,
+    optional: true, // todo false 
+  }
 }));
-
-Meteor.methods({
-    realtyInsert: function (realtyAttributes) {
-        check(Meteor.userId(), String);
-        check(realtyAttributes, {           
-            text: String,
-            name: String,
-            cityId: String,
-            age: String,
-            floor: String,
-            floorCount: String,
-            rentTime:String,
-            houseType:String,
-            distanceToCity:String,
-            plotArea:String,
-            location:String,
-            landСategory: String,
-            businessType: String,
-            garageType:String,
-            foreignType: String,
-            countryId: String,
-            phone: String,
-            realtyType: String,
-            realtyAdvertType: String,
-            address: String,
-            area: String,
-            roomsId: String,
-            price: String,
-            video: String
-        });
-
-        var user = Meteor.user();
-        var realty = _.extend(realtyAttributes, {
-            userId: user._id,
-            author: user.emails[0].address,
-            submitted: new Date()
-        });
-
-        realtyId = Realty.insert(realty);
-        return { _id: realtyId};
-    },
-});
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -594,13 +529,11 @@ if (Meteor.isServer) {
 
 ////// PERMISSIONS ///////////////////////
 Security.permit(['insert', 'update', 'remove']).collections(
-  [NR,City,Country,Images,Realty]
+  [NR,City,Country,Images]
 ).apply();
 
 ////// PUBLICATIONS ///////////////////////////////////////////////////////////////////////////////// /////////////////////////////////////////////////////////////////////////////////////////////////////
-Meteor.publish('realty', function () {
-    return Realty.find();
-});
+
 Meteor.publish('images', function () {
     return Images.find();
 });
@@ -610,8 +543,8 @@ Meteor.publish('city', function () {
 Meteor.publish('country', function () {
     return Country.find();
 });
-Meteor.publish('NR', function(options) {
-  return NR.find({}, options);
+Meteor.publish('NR', function(options,find) {
+   return NR.find(find, options);
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -623,8 +556,8 @@ Meteor.publish('NR', function(options) {
 ///// FIXTURES /////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
   
-    if (NR.find().count() < 50) {
-      for (i=0;i<50;i++) {
+    if (NR.find().count() < 5) {
+      for (i=0;i<5;i++) {
           NR.insert({text: 'Текст '+i});
       }
     }
@@ -655,12 +588,10 @@ if (Meteor.isClient) {
         layoutTemplate: 'layout',
         loadingTemplate: 'loading',
         waitOn: function () {
-            return [
-                Meteor.subscribe('realty'),
+            return [            
                 Meteor.subscribe('images'),
                 Meteor.subscribe('city'),
                 Meteor.subscribe('country'),
-//                 Meteor.subscribe('NR'),
             ];
         },
         fastRender: true,
@@ -668,56 +599,39 @@ if (Meteor.isClient) {
               
     NRListController = RouteController.extend({
         template: 'nrList',
-        increment: 25,
+        increment: 2,
         limit: function() {
           return parseInt(this.params.nrLimit) || this.increment;
         },
         findOptions: function() {
           return {limit: this.limit()};
         },
+        searchOptions:function () {
+            return (Session.get('sellSearch') === true) ? {userId:Meteor.userId()} : {}; 
+        },
         onBeforeAction: function() {
-            this.NRSub = Meteor.subscribe('NR', this.findOptions());
+            this.NRSub = Meteor.subscribe('NR', this.findOptions(),this.searchOptions());
             this.next();
         },
         NR: function() {
-          return NR.find({}, this.findOptions());
+            return NR.find({}, this.findOptions()); 
         },
         data: function() {
             var hasMore = this.NR().fetch().length === this.limit();
             var nextPath = this.route.path({nrLimit: this.limit() + this.increment});
             return {
-              NR: this.NR(),
-              ready: this.NRSub,
-              nextPath: hasMore ? nextPath : null
+                NR: this.NR(),
+                ready: this.NRSub,
+                nextPath: hasMore ? nextPath : null
             };
         }
     });
 
     Router.map(function () {
-        this.route('realtyList', {
-              path: '/',
-              onBeforeAction: function (pause) {                 
-                    this.render('loading'); 
-                    this.next();
-              }
-        }); 
-        this.route('realtyPage', {
-            path: '/realty/:_id',
-            data: function () {
-                return Realty.findOne(this.params._id);
-            },
-            onBeforeAction: function (pause) {                 
-              this.render('loading'); 
-              this.next();
-            },
-            fastRender: true, 
-        });
-        this.route('/submit', {name: 'realtySubmit'});
         this.route('updateNR', {
             path: '/realty/:_id/edit',
             data: function () {
-              Meteor.subscribe('NR');
-//                 return Realty.findOne(this.params._id);
+              Meteor.subscribe('NR',{},{});
               return NR.findOne(this.params._id);
                 
             },
@@ -725,24 +639,25 @@ if (Meteor.isClient) {
         });
         this.route('addImages',{
               path:"/addImages/:_id",
-              data: function(){
-                  Meteor.subscribe('NR');
-//                 return Realty.findOne(this.params._id);
-                return NR.findOne(this.params._id);
-            },
-            disableProgress: true
+              waitOn: function () {
+                  return [Meteor.subscribe('NR',{},{})];
+              },
+              data: function(){                 
+                  return NR.findOne(this.params._id);                  
+              },
+              disableProgress: true
         });
         this.route('insertNR',{
               path:"/nrPanel"
         });
         this.route('nrList',{
-              path:"/nrList/:nrLimit?",             
+              path:"/:nrLimit?",             
               controller: NRListController
         });
               
     });
 
-    Router.onBeforeAction(FuncProvider.requireLogin, {only: 'realtySubmit'});
+//     Router.onBeforeAction(FuncProvider.requireLogin, {only: 'realtySubmit'});
     Router.onBeforeAction('loading');
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -752,18 +667,8 @@ if (Meteor.isClient) {
 /////// TEMPLATES ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-              
-    Template.nrList.helpers({
-        NR:function(){
-           return NR.find({});
-        },
-     });
-              
-                          
-              
-              
     Template.realtyItem.helpers({
-        ownPost: true,//FuncProvider.ownObject,
+        ownPost: FuncProvider.ownObject,
         realtyType: FuncProvider.realtyType,
         images: function () {
               var i = 0
@@ -787,65 +692,13 @@ if (Meteor.isClient) {
         'click #delete-realty': function (e) {
             e.preventDefault();
             if (confirm("Вы уверены что хотите удалить?")) {
-//                 Realty.remove(this._id);
-              NR.remove(this._id);
+                console.log(this._id);
+                NR.remove(this._id);
                 Images.remove({realtyId: this._id});
             }
         }
     });
 
-    Template.realtyList.helpers({
-        realty: function () {
-            return NR.find({}, {sort: {submitted: -1}});
-        }
-    });
-
-    Template.realtyForm.helpers({      
-        cityAll: function(){
-            return City.find();
-        },        
-    });
-  
-    Template.realtyFormOptions.helpers({
-        realtyRooms: FuncProvider.realtyRooms,
-        ageAll: [{_id:" ",title: " "},{_id:"new",title: "Новое жилье"},{_id:"old",title: "Вторичное жилье"}],
-        floorAll: function(){
-            var floor = [{_id : " ",title: " "}];
-            for(i=1;i<101;i++){
-              floor.push({_id:"floor"+i,title:i});
-            }
-            return floor;
-        },
-        floorCountAll:function(){
-          var floorCount = [{_id : " ",title : " "}];
-            for(i=1;i<101;i++){
-              floorCount.push({_id:"floorCount"+i,title:i});
-            }
-            return floorCount;
-        },
-        countryAll: function(){
-            return Country.find();
-        }, 
-        rentTimeAll:[{_id:" ",title:" "},{_id:"hours",title:"Почасовая"},{_id:"month",title:"Помесячная"},{_id:"long",title:"Надолго"}],
-        houseTypeAll:[{_id:" ",title:" "},{_id:"house",title:"Дом"},{_id:"cottage",title:"Котедж"},{_id:"townhouse",title:"Таунхаус"}],
-        locationAll:[{_id:" ",title:" "},{_id:"inCity",title:"В городе"},{_id:"outCity",title:"За городом"}],
-        landСategoryAll:[{_id:" ",title:" "},{_id:"sh",title:"C/Х земли"},{_id:"colony",title:"Земли поселений"}],
-        garageTypeAll:[{_id:" ",title:" "},{_id:"garage",title:"Гараж"},{_id:"carplace",title:"Машиноместо"}],
-        businessTypeAll:[{_id:" ",title:" "},{_id:"shop",title:"Магазин"},{_id:"storage",title:"Склад"}],
-        foreignTypeAll:[{_id:" ",title:" "},{_id:"house",title:"Дом"},{_id:"willage",title:"Вилла"}],
-    });
-  
-    Template.realtyFormOptions.rendered = function(){
-        var rt = Session.get('realtyTypeForm');
-        var at = Session.get('advertTypeForm');
-    };
-
-    Template.realtyForm.events({
-      'click #some':function(e,template){     
-        e.preventDefault();
-      }
-    });
-  
     Template.advertType.events({
       'click label':function(e,template){  
         e.preventDefault();
@@ -854,7 +707,7 @@ if (Meteor.isClient) {
         $("input#realtyAdvertType").val(id);
         FuncProvider.visibleRealtyFormOptions();
       }
-    });
+    }); 
 
     Template.realtyTypeOptions.events({
       'click label':function(e,template){     
@@ -865,97 +718,7 @@ if (Meteor.isClient) {
         FuncProvider.visibleRealtyFormOptions();
       }
     });
-
-    Template.realtyTypeOptions.rendered = function(){
-        
-    };
-
-    Template.advertType.rendered = function(){
-        
-    };
-
-    Template.optionRooms.helpers({
-        selected: FuncProvider.selectedOption
-    });  
-    Template.optionCity.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionCountry.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionAge.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionFloor.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionFloorCount.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionRentTime.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionHouseType.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionLocation.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionLandСategory.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionGarageType.helpers({
-        selected: FuncProvider.selectedOption
-    });
-    Template.optionBusinessType.helpers({
-        selected: FuncProvider.selectedOption
-    });
-              
-    Template.optionForeignType.helpers({
-        selected: FuncProvider.selectedOption
-    });
-
-    Template.realtySubmit.events({
-        'submit form': function (e, template) {
-            e.preventDefault();
-            
-            var realty = FuncProvider.realtyPopulate(e);
-
-            Meteor.call('realtyInsert', realty, function (error, result) {
-                // отобразить ошибку пользователю и прерваться
-                if (error)
-                    return alert(error.reason);
-
-                // show this result but route anyway
-                if (result.realtyExists)
-                    alert('This link has already been realty');
-                 Router.go('addImages', {_id: result._id});
-            });
-        }
-    });
-
-    Template.realtySubmit.rendered = function(){
-         Session.set('realtyTypeForm',"");
-         Session.set('advertTypeForm',"");
-    };
-
-    Template.realtyEdit.events({
-//         'submit form': function (e, template) {
-//             e.preventDefault();
-
-//             var currentRealtyId = this._id;
-//             var realtyProperties = FuncProvider.realtyPopulate(e);
-//             Realty.update(currentRealtyId, {$set: realtyProperties}, function (error) {
-//                 if (error) {
-//                     alert(error.reason);
-//                 } else {
-//                     Router.go('addImages', {_id: currentRealtyId});
-//                 }
-//             });
-//         }
-    });
-
-//     Template.realtyEdit.rendered = function(){ 
+    
     Template.insertNR.rendered = function(){ 
         Session.set('realtyTypeForm',"");
         Session.set('advertTypeForm',"");
@@ -971,10 +734,8 @@ if (Meteor.isClient) {
     Template.addImages.events({
         'click #next-button': function (e, template) {
             e.preventDefault();
-//             Router.go('realtyPage', {_id: this._id});
               Router.go('nrList');
-        }
-      
+        }      
     });
 
     Template.addImages.helpers({
@@ -982,10 +743,9 @@ if (Meteor.isClient) {
           return Images.find({realtyId:this._id});
         }
     });
-          
-    Template.addImages.rendered = function(){
         
-         console.log(this.data);
+    Template.addImages.rendered = function(){
+      
         var realtyId = this.data._id;
         var countImages = Images.find({realtyId:realtyId}).count();
         var arrayOfImageIds = [];
@@ -1020,20 +780,24 @@ if (Meteor.isClient) {
         });
     }
     
-   Template.editImages.events({
-     'click #delete-edit-images':function(){
-       Images.remove(this._id);
-     }
-   });
-
+    Template.searchPanel.events({
+        'click #lsellSearch':function (e,template){
+            e.preventDefault();
+            Session.set('sellSearch',true); 
+            console.log('test');
+        }
+    });
+    
+    Template.editImages.events({
+      'click #delete-edit-images':function(){
+        Images.remove(this._id);
+      }
+    });
   
     Template.insertNR.helpers({
         typeForm: 'insert',
-//             typeForm: 'update',
     });
-  
-  
-  
+ 
     Deps.autorun(function () {
       var connected = Meteor.status().connected;     
       Session.set("connected", connected);
@@ -1044,47 +808,35 @@ if (Meteor.isClient) {
           return Session.get("connected") ? true : false;
       }
     });
-  
-  
-  
-  
-  
-  
-  
-AutoForm.addHooks(['insertNR','updateNR'], {
-    after: {
-      insert: function(error, result) {
-        if (error) {
-          console.log("Insert Error:", error);
-        } else {
-//           console.log("Insert Result:", result);
-             Router.go('addImages', {_id: result});
-        }
+    
+    AutoForm.addHooks(['insertNR','updateNR'], {
+      before: {
+          insert: function(doc, template) {
+               console.log(doc);
+               doc.userId = Meteor.userId();
+               return doc;
+          }
       },
-      update: function(error,result,temp) {
-        if (error) {
-          console.log("Update Error:", error);             
-        } else {
-//           console.log("Update Result",error,result,temp);
-             Router.go('addImages', {_id: temp.data.doc._id});
+      after: {
+        insert: function(error, result) {
+          if (error) {
+              console.log("Insert Error:", error);
+          } else {
+               console.log(result); 
+               Router.go('addImages', {_id: result});
+          }
+        },
+        update: function(error,result,temp) {
+          if (error) {
+              console.log("Update Error:", error);             
+          } else {
+               console.log(temp.data.doc);
+               Router.go('addImages', {_id: temp.data.doc._id});
+          }
         }
       }
-    }
-  });
-
-  
-  
-  
-  
-//   Template.registerHelper("currentFieldValue", function () {
-//       var valueIns = AutoForm.getFieldValue("insertBookForm", "year");
-//       console.log(valueIns);
-//       return valueIns=="2014";
-//   });
-  
-  
+    }); 
   
   FuncProvider.visibleRealtyFormOptions();
   
-
 }///// END CLIENT //////////////////////////
